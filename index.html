@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en-Us">
+<head>
+	<title>OpenShift app demo</title>
+	<script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+hello world
+
+<script>
+var server = io.connect(window.location.href);
+console.log(server);
+</script>
+</body>
+</html>

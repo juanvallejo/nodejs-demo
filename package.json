@@ -1,0 +1,19 @@
+{
+  "name": "nodejs-demo",
+  "version": "1.0.0",
+  "description": "Sample OpenShift v3 websocket app",
+  "main": "index.js",
+  "scripts": {
+    "run": "node index.js",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com//juanvallejo/nodejs-demo"
+  },
+  "author": "juanvallejo",
+  "license": "ISC",
+  "dependencies": {
+    "socket.io": "^2.0.3"
+  }
+}
