@@ -4,7 +4,7 @@
   "description": "Sample OpenShift v3 websocket app",
   "main": "index.js",
   "scripts": {
-    "run": "node index.js",
+    "start": "node index.js",
     "test": "test"
   },
   "repository": {
