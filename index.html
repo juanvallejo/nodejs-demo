@@ -3,13 +3,236 @@
 <head>
 	<title>OpenShift app demo</title>
 	<script src="/socket.io/socket.io.js"></script>
+<link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
+<link rel="stylesheet" href="/reset.css">
+<style>
+::-webkit-input-placeholder {
+  color: white;
+}
+::-moz-placeholder {
+  color: white;
+}
+:-moz-placeholder {
+  color: white;
+}
+body {
+	background: black;
+	font-size: 16px;
+}
+#wrapper {
+	background: transparent;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+	#chat-wrapper {
+		text-align: center;
+		color: white;
+		display: table;
+		width: 100%;
+		height: 100%;
+	}
+		#chat-content {
+			text-align: center;
+			color: white;
+			font-family: 'Raleway', sans-serif;
+			font-size: 2em;
+			vertical-align: middle;
+			display: table-cell;
+		}
+			/*hide scrollbars*/
+			#chat-content-parent-wrapper{
+			}
+			#chat-content-wrapper {
+				width: 50%;
+				max-height: 50%;
+				overflow-y: hidden;
+				overflow-x: hidden;
+				background: transparent;
+				display: inline-block;
+			}
+				#chat-window {
+					/*height: 10%;*/
+					width: 100%;
+					display: inline-block;
+					text-align: left;
+					padding-bottom: 10px;
+					padding-right: 17px;
+				}
+					.message {
+						display: inline-block;
+						width: 100%;
+						height: 10%;
+						border-bottom: 1px solid rgba(255,255,255,0.2);
+						padding:10px 0 10px 0;
+					}
+						.message:last-child {
+							padding-bottom: 0;
+							border-bottom: 0;
+						}
+			#chat-input {
+				width: 50%;
+				height: 10%;
+				border-top: 1px solid white;
+				display: inline-block;
+			}
+				#chat-input input {
+					padding: 10px 0 10px 0;
+					background: transparent;
+					width: 100%;
+					height: inehrit;
+					border: 0;
+					margin: 0;
+					color: white;
+					font: inherit;
+					text-align: center;
+				}
+</style>
 </head>
 <body>
-hello world
-
+<div id="wrapper">
+	<div id="chat-wrapper">
+		<div id="chat-content">
+			<div id="chat-content-wrapper">
+				<div id="chat-window"></div>
+			</div>
+			<div id="chat-input">
+					<input type="text" disabled placeholder="Connecting to server..." />
+				</div>
+		</div>
+	</div>
+</div>
 <script>
 var server = io.connect(window.location.href);
-console.log(server);
+var input = new Input(document.getElementById('chat-input').children[0]);
+var chat = new Chat(document.getElementById('chat-window'));
+
+server.on('connect', function() {
+	input.enable();
+	input.focus();
+});
+
+server.on('disconnect', function() {
+	input.blur();
+	input.disable();
+});
+
+server.on('message', function(data) {
+	chat.addMessage(new Message(data.message));
+});
+
+
+input.onEnter(function(text) {
+	if (!text) {
+		return;
+	}
+
+	server.emit('message', {
+		message: text
+	});
+});
+
+function Input(domElem) {
+	var self = this;
+
+	this.elem = domElem;
+	this.disabled = false;
+	this.callbacks = [];
+
+	this.disable = function(text) {
+		this.disabled = true;
+		this.elem.setAttribute('disabled', true);
+		this.elem.placeholder = text || 'Connecting to server...';
+	};
+	this.enable = function(text) {
+		this.disabled = false;
+		this.elem.removeAttribute('disabled');
+		this.elem.placeholder = text || 'Type something';
+	};
+	this.focus = function() {
+		this.elem.focus();
+	};
+	this.blur = function() {
+		this.elem.blur();
+	};
+
+	this.onEnter = function(callback) {
+		this.callbacks.push(callback);
+	};
+
+	// handle enter events
+	this.elem.addEventListener('keypress', function(e) {
+		if (e.keyCode != 13) {
+			return;
+		}
+
+		for(var i = 0; i < self.callbacks.length; i++) {
+			self.callbacks[i].call(self, self.elem.value);
+		}
+
+		self.elem.value = '';
+	});
+}
+
+function Chat(domElem) {
+	this.elem = domElem;
+
+	this.clear = function() {
+		this.elem.innerHTML = '';
+	};
+	this.addMessage = function(message) {
+		if (this.parseCommand(message)) {
+			return;
+		}
+
+		message.appendTo(this.elem);
+		this.elem.parentNode.scrollTop = this.elem.scrollHeight;
+	};
+
+	this.parseCommand = function(message) {
+		var cmd = message.toString();
+		if(cmd[0] !== '/' || cmd.length <= 1) {
+			return false;
+		}
+
+		cmd = cmd.split('');
+		cmd.splice(0, 1);
+		cmd = cmd.join('');
+
+		var valid = false;
+		if (cmd === "clear") {
+			valid = true;
+			this.clear();
+		}
+
+		if (!valid) {
+			this.addMessage(new Message('> invalid command: "' + cmd + '"'));
+		}
+		return true;
+	}
+}
+
+function Message(text) {
+	this.elem = document.createElement('div');
+	this.elem.className = 'message';
+	this.elem.innerHTML = text;
+
+	this.setContent = function(newContent) {
+		this.elem.innerHTML = newContent;
+	}
+	this.toString = function() {
+		return this.elem.innerHTML;
+	}
+
+	this.getHeight = function() {
+		return this.elem.clientHeight;
+	};
+	this.appendTo = function(parent) {
+		parent.appendChild(this.elem);
+	};
+}
 </script>
 </body>
 </html>
