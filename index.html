@@ -2,7 +2,8 @@
 <html lang="en-Us">
 <head>
     <title>OpenShift app demo</title>
-    <script src="/socket.io/socket.io.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/jquery-3.2.1.min.js"></script>
 <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
 <link rel="stylesheet" href="/reset.css">
 <style>
@@ -15,67 +16,73 @@
 :-moz-placeholder {
   color: white;
 }
-body {
+html,body {
     background: black;
     font-size: 16px;
     height: 100%;
+    min-height: 100%;
+    max-height: 100%;
+    overflow-y: hidden;
 }
 #wrapper {
-    background: transparent;
     width: 100%;
     height: 100%;
-    min-height: 10%;
+    min-height: 100%;
     max-height: 100%;
-    position: absolute;
     left: 0;
     top: 0;
+    text-align: center;
+    display: table;
 }
     #chat-wrapper {
-        text-align: center;
         color: white;
-        display: table;
+        display: table-cell;
+        vertical-align: middle;
+        text-align: center;
         width: 100%;
+        max-height: 100%;
+        font-size: 2em;
         height: 100%;
-        min-height: 10%;
+        min-height: 100%;
     }
         #chat-content {
-            height: 100%;
-            min-height: 10%;
+            max-height: 60%;
+            height: 60%;
+            min-height: 60%;
+            width: 50%;
+            max-width: 50%;
             text-align: center;
             color: white;
             font-family: 'Raleway', sans-serif;
-            font-size: 2em;
-            vertical-align: middle;
-            display: table-cell;
+            display: inline-block;
         }
             #chat-content-wrapper {
-                width: 50%;
-                max-height: 50%;
-                height: 100%;
-                min-height: 10%;
+                width: 100%;
+                max-height: 100%;
+                height: 1px;
+                min-height: 100%;
+                padding-bottom: 12%;
                 overflow-y: hidden;
                 overflow-x: hidden;
-                background: transparent;
                 display: inline-block;
             }
                 #chat-window {
-                    max-height: 100%;
-                    height: 100%;
-                    min-height: 10%;
+                    max-height: 90%;
+                    min-height: 50%;
                     width: 100%;
                     display: inline-block;
                     overflow-y: scroll;
                     text-align: left;
                     /*padding-bottom: 10px;*/
                     padding-right: 17px;
-                    padding-left: 5px;
+                    padding-left: 6px;
                 }
                     .message {
                         display: table;
                         width: 100%;
                         height: 10%;
                         border-bottom: 1px solid rgba(255,255,255,0.2);
-                        /*padding:10px 0 10px 0;*/
+                        padding:10px 0 10px 0;
                     }
                         .message:last-child {
                             border-bottom: 0;
@@ -85,17 +92,16 @@ body {
                             display: table-cell;
                             vertical-align: middle;
                         }
-            #chat-input {
-                width: 50%;
-                /*height: 10%;*/
-                border-top: 1px solid white;
-                display: inline-block;
-            }
+                #chat-input {
+                    width: 100%;
+                    height: 10%;
+                    border-top: 1px solid white;
+                    display: inline-block;
+                }
                 #chat-input input {
                     padding: 10px 0 10px 0;
                     background: transparent;
                     width: 100%;
-                    /*height: 10%;*/
                     border: 0;
                     margin: 0;
                     color: white;
@@ -111,28 +117,10 @@ body {
     <div id="chat-wrapper">
         <div id="chat-content">
             <div id="chat-content-wrapper">
-                <div id="chat-window">
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
-                    <div class="message"><span>test</span></div>
+                <div id="chat-window"></div>
+                <div id="chat-input">
+                    <input type="text" disabled placeholder="Connecting to server..." />
                 </div>
-            </div>
-            <div id="chat-input">
-                <input type="text" disabled placeholder="Connecting to server..." />
             </div>
         </div>
     </div>
@@ -141,6 +129,8 @@ body {
 var server = io.connect(window.location.href);
 var input = new Input(document.getElementById('chat-input').children[0]);
 var chat = new Chat(document.getElementById('chat-window'));
+
+adjustMaxHeight(chat.getDomElem());
 
 server.on('connect', function() {
     input.enable();
@@ -221,7 +211,11 @@ function Chat(domElem) {
         }
 
         message.appendTo(this.elem);
-        this.elem.parentNode.scrollTop = this.elem.scrollHeight;
+        // this.elem.scrollTop = this.elem.scrollHeight;
+        $(this.elem).animate({scrollTop: this.elem.scrollHeight}, {
+            duration: 1000,
+            queue: false
+        });
     };
 
     this.parseCommand = function(message) {
@@ -245,6 +239,10 @@ function Chat(domElem) {
         }
         return true;
     }
+
+    this.getDomElem = function() {
+        return this.elem;
+    };
 }
 
 function Message(text) {
@@ -269,6 +267,15 @@ function Message(text) {
     };
 
     this.setContent(this.content);
+}
+
+// utils
+window.addEventListener('resize', function() {
+    adjustMaxHeight(chat.getDomElem());
+});
+
+function adjustMaxHeight(domElem) {
+    // domElem.style.maxHeight = parseInt(window.clientHeight / 2) + 'px';
 }
 </script>
 </body>
